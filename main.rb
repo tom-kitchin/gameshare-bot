@@ -206,8 +206,6 @@ bot.command(
 
   user_id_to_auth = user_id_to_auth.to_i
 
-  @authorised = DB["select * from authorised_users where user_id is \"#{user_id_to_auth}\""].any?
-
   if not authorised_users.where(user_id: user_id_to_auth).empty?
     event << "User <@#{user_id_to_auth}> is already authorised!"
 
@@ -228,6 +226,29 @@ bot.command(
 
     return
   end
+end
+
+bot.command(
+  :deauthorise,
+  min_args: 1,
+  max_args: 1,
+  description: "Deauthorise a user so they can no longer request keys from the bot.",
+  usage: "!deauthorise \"[discord user ID]\".",
+  help_available: false,
+  required_permissions: [:manage_server],
+  channels: [@auditChannel]
+) do |event, user_id_to_deauth|
+  user_id_to_deauth = user_id_to_deauth.to_i
+
+  if authorised_users.where(user_id: user_id_to_deauth).empty?
+    event << "User <@#{user_id_to_deauth}> is not currently authorised!"
+
+    return
+  end
+
+  authorised_users.delete(user_id: user_id_to_deauth)
+
+  bot.send_message(@auditChannel, "Deauthorised user <@#{user_id_to_deauth}>!")
 end
 
 bot.run
